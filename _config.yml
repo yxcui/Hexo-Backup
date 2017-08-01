@@ -1,0 +1,93 @@
+# yxcui Configuration
+## Docs: https://yxcui.io/docs/configuration.html
+## Source: https://github.com/yxcuijs/yxcui/
+
+# Site
+title: Yxcui's Little Stack
+subtitle: 
+description: Life is not a destination, is a journey.
+author: yxcui
+language: en
+timezone: #默认使用电脑时间
+
+# URL
+## If your site is put in a subdirectory, set url as 'http://yoursite.com/child' and root as '/child/'
+url: http://yxcui.github.io
+root: /
+permalink: :year/:month/:day/:title/
+permalink_defaults:
+
+# Directory
+source_dir: source #source目录
+public_dir: public
+tag_dir: tags
+archive_dir: archives
+category_dir: categories
+code_dir: downloads/code
+i18n_dir: :lang
+skip_render: #跳过渲染
+
+# Writing
+new_post_name: :title.md # File name of new posts
+default_layout: post
+titlecase: false # Transform title into titlecase
+external_link: true # Open external links in new tab
+filename_case: 0
+render_drafts: false
+post_asset_folder: true
+relative_link: false
+future: true
+highlight:
+  enable: true
+  line_number: true
+  auto_detect: false
+  tab_replace:
+
+# Category & Tag
+default_category: uncategorized
+category_map:
+tag_map:
+
+# Date / Time format
+## yxcui uses Moment.js to parse and display date
+## You can customize the date format as defined in
+## http://momentjs.com/docs/#/displaying/format/
+date_format: YYYY-MM-DD
+time_format: HH:mm:ss
+
+# Pagination
+## Set per_page to 0 to disable pagination
+per_page: 5
+pagination_dir: page
+
+# Extensions
+## Plugins: https://yxcui.io/plugins/
+## Themes: https://yxcui.io/themes/
+theme: next
+
+# Extensions
+## Plugins: http://hexo.io/plugins/
+## Plugins: http://hexo.io/atom.xml
+#RSS
+plugins:
+    hexo-generator-feed
+#Feed Atom
+feed:
+    type: atom
+    path: atom.xml
+    limit: 20
+
+# Extensions
+## Plugins: http://hexo.io/plugins/
+## Plugins: http://hexo.io/search.xml
+#RSS
+search:
+    path: search.xml
+    field: all
+    
+# Deployment
+## Docs: https://yxcui.io/docs/deployment.html
+deploy:
+  type: git
+  repository: https://github.com/yxcui/yxcui.github.io.git
+  branch: master
