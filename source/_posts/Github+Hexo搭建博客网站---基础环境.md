@@ -1,27 +1,30 @@
 ﻿---
 title: Github+Hexo搭建博客网站---基础环境
+date: 2017-08-03 01:59:56
 tags: Github
+author: yxcui
 ---
+
 ### 写在前面
 记录博客的地方的确很多，比如CSDN、博客园、简书和作业部落等，但是这些好像不易百度到或者想直接去找自己的资料，所以如果有一个公共接口进入，能够将所有的记录内容都能访问到，就显得很easy，这就可以通过一个域名进入博客网站主页，然后就很简单找到自己记录过的笔记和心得，是个很不错的选择，还能装一装X，拥有自己的[独家域名][1]。
 以后还可以将自己做的一些工作放到博客上，比如做的一些数据分析工作等。
 
-### 一、所需材料
-#### 1. Git 安装
+### 所需材料
+#### Git 安装
 此前总结过[Git的安装和配置过程](https://zybuluo.com/ecnu-cyx/note/692971)。
 
-#### 2. Node.js 安装
+#### Node.js 安装
 菜鸟教程上有很好的[Node.js安装和配置教程](http://www.runoob.com/nodejs/nodejs-install-setup.html)。
 
-#### 3. Hexo
+#### Hexo
 [Hexo][2] is a fast, simple and powerful blog framework. You write posts in Markdown (or other languages) and Hexo generates static files with a beautiful theme in seconds. [中文帮助文档][3]
 
-### 二、Hexo安装与配置
-#### 1. 安装Hexo
+### Hexo安装与配置
+#### 安装Hexo
 在任意处打开Git Bash，执行`$ npm install -g hexo-cli` 
 【注：npm命令是集成在新版的node.js中的，可以输入`npm -v`来查看npm的版本，即node.js的版本，出现版本号说明安装成功。npm可以从服务器下载第三方的包和命令行程序到本地，同样可以将自己写的包和命令行程序上传到NPM服务器上】
 
-#### 2. 创建本地存放博客目录
+#### 创建本地存放博客目录
 选择一个本地目录，空白处右键选择Git Bash Here，执行：
 >- `$ hexo init <folder>`  #创建目录并初始化
 >- `$ cd <folder>`  #进入创建的文件夹
@@ -38,7 +41,7 @@ tags: Github
         |   └── _posts
         └── themes
         
-#### 3. 启动本地服务
+#### 启动本地服务
 执行以下命令启动本地服务：
 >- `$ hexo generate`  #生成静态文件
 >- `$ hexo server`  #启动本地服务器
@@ -46,7 +49,7 @@ tags: Github
 如果启动过程中没有报错，此时可以用浏览器访问`http://localhost:4000/`，会出现一个Hello World的博客页面，hexo使用的默认主题是landscape，而且此时的服务是本地启动的，别人并不能看到。
 【注：更改本地服务端口命令`hexo server -p <port>`】
 
-#### 4. 与Github连接
+#### 与Github连接
 >1. 首先在Github上创建版本库New Repository
 注意：**repository的名字必须为`username.github.io`，username即为Github的账户名**，我的个人地址为`https://yxcui.github.io`，如果将Repository name随意填写，是不能访问的，返回的是404的错误页面。
 
@@ -63,6 +66,26 @@ tags: Github
     + `$ hexo g`
     - `$ hexo d`  ##`hexo d`命令第一次会要求输入用户名和密码，即Github的用户名和秘密
 【注：如果出现错误"`ERROR Deployer not found : github`"，先运行`$ npm install hexo-deployer-git --save`，在执行上述命令】
+
+#### 创建和发布文章
+>1. 定位到Hexo文件夹
+    `cd d:Hexo`
+
+>2. 新建文章
+    `hexo new "article title"`
+    该文件保存在Source/_post中，该文件是MarkDown文件，可用支持MarkDown编辑的工具进行编写。
+    
+>3. 发布文章
+    `hexo g`
+    `hexo d`
+    【注：如果出现错误"`ERROR Deployer not found : github`"，先运行`$ npm install hexo-deployer-git --save`，再执行上述命令】
+    
+>4. 文章中图片的插入
+    + 修改 \_config.yml 文件中的 `post\_asset_folder`属性，改为`true`；
+    - 前提需要使用Hexo的一个插件，首先到Hexo的根目录 `cd d:Hexo`;
+    - 命令：`npm install https://github.com/CodeFalling/hexo-asset-image --save` / `npm install hexo-asset-image --save`安装插件;
+    - 然后把图片放入对应文章的配套文件夹下，如图片`1.jpg`，文中使用的时候即为`![](github-hexo-blog/1.jpg)`;
+    - 最后主题样式替换路径：`/source/css/_partial/highlight.styl`
 
 ### 最后访问
 个人主页：https://yxcui.github.io
