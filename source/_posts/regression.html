@@ -1,6 +1,6 @@
-<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="author" content="yxcui">
-<meta name="date" content="2017-08-13 23:03:33">
-<meta name="tags" content="algorithms"><style>body {
+<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="date" content="2017-09-07 13:50:54">
+<meta name="tags" content="GIS">
+<meta name="author" content="yxcui"><style>body {
   max-width: 980px;
   border: 1px solid #ddd;
   outline: 1300px solid #fff;
@@ -1016,74 +1016,143 @@ body .markdown-body
     page-break-after: avoid;
   }
 }
-</style><title>Step Stones</title></head><body><article class="markdown-body"><p>跳石板，这是网易校招的一道编程题，很显然这是一个最优化的问题，由于在平常也没真正练习这些经典算法题，所以拿到题目手足无措，一开始的思路就是递归，递归是能够找到最小值，但是效率好像不理想，很显然自己搞不下去了，忽视了核心问题就是分解后的子问题不是相互独立的，而是互相有关联的。<br />
-算法基础是<font color="red">动态规划</font>，这是常用的最优化算法之一。<br />
-<a href="http://blog.csdn.net/deepit/article/details/6530282">递归与动态规划小结不错</a>~</p>
-<h3 id="_1"><a name="user-content-_1" href="#_1" class="headeranchor-link" aria-hidden="true"><span class="headeranchor"></span></a>题目描述</h3>
-<p>小易来到了一条石板路前，每块石板上从1挨着编号为：1、2、3.......<br />
-这条石板路要根据特殊的规则才能前进：对于小易当前所在的编号为K的 石板，小易单次只能往前跳K的一个约数(不含1和K)步，即跳到K+X(X为K的一个非1和本身的约数)的位置。 小易当前处在编号为N的石板，他想跳到编号恰好为M的石板去，小易想知道最少需要跳跃几次可以到达。<br />
-示例：<br />
-N = 4，M = 24：<br />
-4-&gt;6-&gt;8-&gt;12-&gt;18-&gt;24<br />
-于是小易最少需要跳跃5次，就可以从4号石板跳到24号石板 </p>
-<p><strong>输入描述</strong>：<br />
-输入为一行，有两个整数N，M，以空格隔开。<br />
-(4 ≤ N ≤ 100000)<br />
-(N ≤ M ≤ 100000)<br />
-<strong>输出描述</strong>：<br />
-输出小易最少需要跳跃的步数,如果不能到达输出-1</p>
-<p><strong>输入例子</strong>：<br />
-4 24<br />
-<strong>输出例子</strong>：<br />
-5</p>
-<h3 id="_2"><a name="user-content-_2" href="#_2" class="headeranchor-link" aria-hidden="true"><span class="headeranchor"></span></a>分析思路</h3>
-<p>算法基础是动态规划，那么一般过程就是将原始问题划分为若干个子问题，但是子问题之间不是独立存在的。即上一子问题的解会影响下一步子问题的解，因此需要创建一个链表，将每个子问题的解存入，然后组合出原始问题的最优解。核心是状态转移公式。</p>
+</style><title>regression_GIS</title></head><body><article class="markdown-body"><p><a href="http://www.advancedtechnic.com/ud/Classical%20Samples%20of%20Multiple%20Linear%20Regression%20Analysis.htm">多元回归分析示例</a></p>
+<h3 id="_1"><a name="user-content-_1" href="#_1" class="headeranchor-link" aria-hidden="true"><span class="headeranchor"></span></a>一、探索性回归</h3>
+<p>在已经搜集到的解释变量中，不是所有的解释变量都是对被解释变量相关的，或者说找到一个比较正确的OLS模型是非常困难的，需要对解释变量进行一些最优化组合。探索性回归分析就是尝试解释变量的所有可能组合，以找到可以通过所有必要的OLS诊断。<br />
+【注】：探索性回归与逐步回归类似，但不是找到具有最高 <code>$R^2$</code>，而是找到满足OLS所有假设和要求的模型。</p>
+<p><a href="http://resources.arcgis.com/zh-cn/help/main/10.2/index.html#//005p00000054000000">探索性回归工具</a>，可指定参数有：<code>解释变量的最大和最小数量</code>、<code>校正$R^2$</code>、<code>系数P值</code>、<code>方差膨胀因子（VIF）</code>、<code>Jarque-Bera P值</code>（评价模型偏差，指示残差是否服从正态分布）和空间自相关P值（检验残差是否随机分布/空间聚集）的阈值条件。</p>
+<p>满足的条件：</p>
 <blockquote>
-<p>1.创建一维数组，用于存储从起点到达改点的最小跳跃次数；<br />
-    &ndash; 初试起点为0，其它元素均为int最大值，用来表示不可达</p>
+<ul>
+<li>OLS模型条件<ul>
+<li>大于指定的校正<code>$R^2$</code>阈值；</li>
+<li>对于所有纳入模型的解释变量，系数<code>P值</code>小于指定的阈值；</li>
+<li>对于所有纳入模型的解释变量，系数<code>VIF值</code>小于指定的阈值（经验阈值7.5）；</li>
+<li>返回的<code>Jarque-Bera P值</code>大于指定的值。</li>
+</ul>
+</li>
+<li>对模型残差运用空间自相关工具（<code>Global Moran's I</code>），计算得到的P值与指定的P值进行比较，如果小于指定的P值，则模型视为合格模型。</li>
+</ul>
 </blockquote>
-<pre><code class="python"># init a dictionary to store the count
-import sys
-stone = {}
-stone[N] = 0
-for i in range(N+1, M+1):
-    stone[i] = sys.maxint   # the maximum int
-</code></pre>
-
+<p>【附】：探索性回归分析工具还会对具有三个最高校正<code>$R^2$</code>结果的模型使用空间自相关工具，进行回归残差检验。</p>
+<p>正确OLS模型应该满足以下条件：</p>
 <blockquote>
-<p>2.遍历每一块石板，然后求解当前石板的约数（列表），针对每个约数可以求解从当前石板可以到达的石板编号，且能够获取从当前石板到达的石板的跳跃次数；<br />
-    &ndash; <font color='red'>后一步石板最小跳跃次数求解</font>：如果后一步的石板次数是初始化的最大值，则在当前石板达到的跳跃次数基础上加1，否则与后一步石板的跳跃次数做比较，求两者中的最小者；<br />
-<pre><code class="python">if N == M:
-        return stone[M]
-    else:
-        # 针对每一个石块，计算其能到达的石块，然后每个石块都保留了到达此处需要的步数，每次遍历都保留最小值，即最少需要的步数
-        for i in range(N, M+1):
-            divisors = calDivisors(i)
-            for j in divisors:
-                if i + j &lt;= M:
-                    stone[i + j] = min(stone[i] + 1, stone[i + j])
-</code></pre></p>
-<p>附：求解一个数的所有约数<br />
-<pre><code class="python"># calculate all divisors without 1 and self for a given number in the natural range
-def calDivisors(N):
-    divisors = []
-    for i in range(2, int(N / 2.0)+1):   # 此处如果是sqrt(N)， 应该求解的不是所有约数？
-        if N % i == 0:
-            divisors.append(i)
-    # divisors.append(N)
-    return divisors
-</code></pre></p>
+<ul>
+<li>解释变量的所有变量系数都具有统计显著性；</li>
+<li>变量系数都能够反映对应解释变量与因变量之间的预期关系或与因变量之间的合理关系；</li>
+<li>解释变量从VIF小于7.5的变量中获得；</li>
+<li>Jarque-Bera P值不具有统计显著性，即残差不存在正态分布；</li>
+<li>空间自相关P值不具有统计显著性，即残差在空间上是随机分布的偏高/低预测值。</li>
+</ul>
 </blockquote>
-<h3 id="_3"><a name="user-content-_3" href="#_3" class="headeranchor-link" aria-hidden="true"><span class="headeranchor"></span></a>保留完整路径</h3>
-<p>以上是能够找到从一个石板调到另外一个石板的最小跳跃次数，但是有时候希望能够保留这个最小路径，即跳跃过程是怎样的？所以需要对上述过程进行略微修改~</p>
-<p>在进行跳跃次数计数的后面紧接着记录调到下一个石板的这一块石板编号，这样就记录了一个连续的过程，即记录了跳到某块石板的前一块石板编号，如“24：18”，即跳到编号为24的石板的前一块石板编号是18。<br />
-所以增加一行代码：<br />
-<pre><code class="python">stoneIndex.append(str(i+j) + &quot;：&quot; + str(i))   # 存储到达 i+j 石块的石块编号
-</code></pre><br />
-打印输出：<br />
-<pre><code class="python">print &quot;;  &quot;.join(stoneIndex)
-</code></pre><br />
-输出结果为：<br />
-<code>6：4;  8：6;  9：6;  10：8;  12：8;  12：9;  12：10;  15：10;  14：12;  15：12;  16：12;  18：12;  16：14;  21：14;  18：15;  20：15;  18：16;  20：16;  24：16;  20：18;  21：18;  24：18;  22：20;  24：20;  24：21;  24：22</code><br />
-其中只有一条可以最少跳跃数完成：<br />
-<code>4 -&gt; 6 -&gt; 8 -&gt; 12 -&gt; 18 -&gt; 24</code></p></article></body></html>
+<p>【争议内容】<br />
+1. 科学方法：应该先建立正式的假设，然后才能对数据进行探索。若仅对训练数据集的拟合，会导致无法对其它数据集的预测或拟合，表现在过拟合的模型不稳定或解释变量系数显著性变小，P值变大。<br />
+2. 数据挖掘：无法先验知晓有助于任何给定真实结果的所有因素。<br />
+3. 针对上述争议内容，最好就是将所有数据分成训练集和验证集。</p>
+<h3 id="ols"><a name="user-content-ols" href="#ols" class="headeranchor-link" aria-hidden="true"><span class="headeranchor"></span></a>二、OLS</h3>
+<p>$ Y = \beta X + \mu $<br />
+<a href="http://resources.arcgis.com/zh-cn/help/main/10.1/index.html#/na/005p00000022000000/">ArcGIS OLS工具</a></p>
+<p>误差零假设：</p>
+<blockquote>
+<ul>
+<li>零条件均值 $E(\mu) = 0$</li>
+<li>同方差性（对不同的自变量集合，随机误差项都有相同的方差，检验参数的估计值是不是有效的）</li>
+<li>正态性</li>
+</ul>
+</blockquote>
+<ol>
+<li><code>P 值</code><br />
+    大多数回归都会进行统计检验以针对每个自变量的关联系数计算出一个称为P的概率值，表示的是零假设成立的概率值。<br />
+    零假设：关联系数与零无显著差异，即关联系数为 0；<br />
+    P值越小，表明关联系数与零无显著差异的概率越小，即关联系数极小可能为0。</li>
+<li><code>$R^2 / adjuested R^2$</code><br />
+    用于量化模型的性能。计算公式如下：<br />
+    $R^2 = SSR / SST$<br />
+    其中 SSR为回归平方和，SST为总偏差平方和，$SST = SSR = SSE$，SSE为残差平方和。<br />
+    解释：值越大，残差平方和就越小，表示总偏差平方和中可以由回归平方和解释的比例越大，回归效果就越显著。<br />
+    局限性：当向模型中增加变量后，$R^2$会变大，但增加的解释变量不一定具有统计学意义，故出现了校正系数 $adjusted R^2$，所以解释变量增多，校正决定系数不一定会增大。<br />
+    注：决定系数的大小还与自变量的取值范围有关，即使$R^2$很大，模型的外推效果不一定很好，应该同时还关注均方误差 <code>MSE</code>。</li>
+</ol>
+<h4 id="_2"><a name="user-content-_2" href="#_2" class="headeranchor-link" aria-hidden="true"><span class="headeranchor"></span></a>空间数据回归常见问题</h4>
+<ol>
+<li>遗漏解释变量<br />
+    后果：其系数和对应的P值不可信<br />
+    解决：检查OLS残差和GWR系数 或者 OLS残差进行热点分析</li>
+<li>非线性关系（OLS/GWR均为线性方法）<br />
+    后果：线性回归模型不佳<br />
+    解决：创建散点图矩阵（Scatter Plot Matrix）来了解所有变量之间的相关关系；另外可以通过变量变换来修复曲线（偏态分布-&gt;正态分布）；或者用非线性方法</li>
+<li>数据异常值（建模之前完成）<br />
+    后果：回归关系背离最佳拟合，从而使回归系数发生偏差<br />
+    解决：创建散点图矩阵、直方图或箱线图来寻找异常点。若异常值不符合实际则直接删除，否则对有无异常值分别进行建模讨论。</li>
+<li>
+<p>不稳定性（空间非平稳性/异质性）<br />
+    后果：因变量与解释变量在研究区内表现出不一致的关系<br />
+    解决：ArcGIS中的OLS工具可以自动检测非平稳性问题并计算稳健标准误差，可尝试用GWR进行分析。<br />
+    附：Koenker(BP)评估空间非平稳性</p>
+<blockquote>
+<ul>
+<li>用于评估模型因变量与解释变量在空间上是否表现出一致的关系；</li>
+<li>如果模型在空间中表现一致，则由解释变量表示的空间进程在各个区域位置也是一直的，且预测值与每个解释变量之间关系的变化不会随着解释变量值的变化而变化（误差同方差）；</li>
+<li>实例，在犯罪预测中，收入作为一个解释变量，可能对收入中位数以下的预测比对中位数以上的预测更为准确，即出现了异方差性。</li>
+<li>Koenker显著性检验表面统计量是显著的，则需要稳健系数标准差和稳健概率来评估解释变量的效果。</li>
+</ul>
+</blockquote>
+</li>
+<li>
+<p>多重共线性<br />
+    后果：导致模型不稳定；<br />
+    解决：OLS工具会给出方差膨胀因子（VIF与7.5），剔除VIF较大的解释变量，或者创建交互变量，或者增加采样大小。</p>
+</li>
+<li>残差的方差不一致性<br />
+    后果：在某些变量范围内，不能很好的预测因变量的值，结果会出现交大的偏差；<br />
+    解决：根据Koenker检验，参考稳健概率来确定解释变量是否具有统计显著性。</li>
+<li>正态分布偏差<br />
+    后果：残差不服从均值为0的正态分布，关联系数的P值将变得不可靠；<br />
+    解决：当Jarque-Bera统计量显著时，很可能是因为错误指定了模型（缺少关键变量）或模型的关系应为非线性关系。</li>
+<li>空间自相关残差<br />
+    后果：当模型的偏高/低估计值存在空间聚类时，会导致模型的不可靠；<br />
+    解决：对残差进行空间自相关检验，若出现空间聚类的统计显著性，则是因为指定错误导致的，缺失关键变量。</li>
+</ol>
+<h3 id="gwr"><a name="user-content-gwr" href="#gwr" class="headeranchor-link" aria-hidden="true"><span class="headeranchor"></span></a>三、GWR</h3>
+<p><a href="http://resources.arcgis.com/zh-cn/help/main/10.1/index.html#/na/005p00000031000000/">ArcGIS工具</a></p>
+<h4 id="_3"><a name="user-content-_3" href="#_3" class="headeranchor-link" aria-hidden="true"><span class="headeranchor"></span></a>工作原理</h4>
+<p>GWR是对每一个空间要素构建一个独立方程，将落在目标要素带宽内的要素因变量与解释变量合并作为目标要素的训练样本集；将目标要素的空间位置到其他各临近点的空间距离作为权，并嵌入到回归参数中，利用局部最小二乘法逐点参数估计。<br />
+【带宽】：取决于核类型、带宽方法、距离以及相邻点数。<br />
+注：若相邻超过1000个样本点，则只取最邻近的1000个；而硬性要求是100个要素样本集，以获得较好结果。</p>
+<h4 id="_4"><a name="user-content-_4" href="#_4" class="headeranchor-link" aria-hidden="true"><span class="headeranchor"></span></a>核心</h4>
+<p>空间权重矩阵（Spatial Weight matrix），通过不同的空间权函数来得到。</p>
+<blockquote>
+<ul>
+<li>距离阈值法<br />
+    选取合适的阈值D，在阈值范围内的为局部样本数据集，该方法较为直接；</li>
+<li>距离反比法<ul>
+<li>$W_{ij} = 1 / {d_{ij}^\alpha$</li>
+<li>该方法不宜直接使用，当回归点本身也为采样点时，易造成$W_ij$无穷大；</li>
+</ul>
+</li>
+<li>Gauss函数（连续单调减函数）<ul>
+<li>$W_{ij} = exp(-(s_{ij} / b)^2)$</li>
+<li>b 为权重与距离之间函数关系的非负数衰减参数，带宽。权重会随着距离的增加而衰减，且衰减的越慢；</li>
+<li>更加普适，克服了前两种的不足；</li>
+</ul>
+</li>
+<li>截尾型函数法<br />
+    常用bi-square函数</li>
+</ul>
+</blockquote>
+<h4 id="_5"><a name="user-content-_5" href="#_5" class="headeranchor-link" aria-hidden="true"><span class="headeranchor"></span></a>权函数带宽优化</h4>
+<p>GWR对带宽b较为敏感，带宽过大回归参数估计的偏差过大，过小又会导致估计的方差过大。</p>
+<blockquote>
+<p>1 交叉验证（CV）<br />
+    - $CV = 1/n*\sum_{i=1}^n[y_i - \hat y_{!=i}(b)]^2$ (不包括目标要素本身)<br />
+    - 带宽b 与 CV值可绘制一条曲线，就可直观找到CV值最小的最优带宽b；<br />
+2 AIC准则<br />
+    - AICc：用于比较不同的回归模型，具有较低AICc值的模型将更好的拟合观测数据，但其不是拟合度的绝对度量，较适合于同一因变量且具有不同解释变量的模型比较有用。<br />
+    - $AIC= 2n\ln(\hat\sigma) + n\ln(2\pi) + n[(n+tr(s))/(n-2-tr(s))]$<br />
+    - $\hat\sigma$是随机误差项的方差极大似然估计值，$\hat\sigma = RSS/n+tr(s)$<br />
+    - 原则：使AIC最小的权函数对应的带宽b。</p>
+</blockquote>
+<h4 id="_6"><a name="user-content-_6" href="#_6" class="headeranchor-link" aria-hidden="true"><span class="headeranchor"></span></a>局部共线性</h4>
+<p>对GWR局部方程，用于方程的解释变量会在空间上存在聚类，会导致在局部出现多重共线性。<br />
+当选取Bandwidth method为AICc或CV时，GWR将查找最佳距离（FIXED核类型）胡最佳相邻点数（ADAPTIVE核类型），若存在局部多重共线性，将阻止AICc和CV解析最佳距离或最佳相邻点数。<br />
+解决：若出现模型错误，则指定距离或相邻点书目，然后检查要素类中的条件数（&gt;30；&rdquo;Null&rdquo;；极小值）查看哪些要素与共线性关联（可移除）。或者可以通过对各解释变量做空间聚类，在空间上出现相同值的位置对应的变量移除掉或将其与其它解释变量合并以便加大值的变化性。</p></article></body></html>
