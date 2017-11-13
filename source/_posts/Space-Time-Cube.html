@@ -1,6 +1,6 @@
-<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="date" content="2017-09-07 13:50:54">
-<meta name="tags" content="GIS">
-<meta name="author" content="yxcui"><style>body {
+<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="author" content="yxcui">
+<meta name="date" content="2017-11-03 09:26:20">
+<meta name="tags" content="GIS"><style>body {
   max-width: 980px;
   border: 1px solid #ddd;
   outline: 1300px solid #fff;
@@ -1016,143 +1016,156 @@ body .markdown-body
     page-break-after: avoid;
   }
 }
-</style><title>regression_GIS</title></head><body><article class="markdown-body"><p><a href="http://www.advancedtechnic.com/ud/Classical%20Samples%20of%20Multiple%20Linear%20Regression%20Analysis.htm">多元回归分析示例</a></p>
-<h3 id="_1"><a name="user-content-_1" href="#_1" class="headeranchor-link" aria-hidden="true"><span class="headeranchor"></span></a>一、探索性回归</h3>
-<p>在已经搜集到的解释变量中，不是所有的解释变量都是对被解释变量相关的，或者说找到一个比较正确的OLS模型是非常困难的，需要对解释变量进行一些最优化组合。探索性回归分析就是尝试解释变量的所有可能组合，以找到可以通过所有必要的OLS诊断。<br />
-【注】：探索性回归与逐步回归类似，但不是找到具有最高 <code>$R^2$</code>，而是找到满足OLS所有假设和要求的模型。</p>
-<p><a href="http://resources.arcgis.com/zh-cn/help/main/10.2/index.html#//005p00000054000000">探索性回归工具</a>，可指定参数有：<code>解释变量的最大和最小数量</code>、<code>校正$R^2$</code>、<code>系数P值</code>、<code>方差膨胀因子（VIF）</code>、<code>Jarque-Bera P值</code>（评价模型偏差，指示残差是否服从正态分布）和空间自相关P值（检验残差是否随机分布/空间聚集）的阈值条件。</p>
-<p>满足的条件：</p>
+</style><title>Space Time Cube</title></head><body><article class="markdown-body"><p>传统的空间聚类模式识别是基于一个空间聚类分析来识别具有统计显著性的热点、冷点和空间异常值的位置。</p>
+<h3 id="_1"><a name="user-content-_1" href="#_1" class="headeranchor-link" aria-hidden="true"><span class="headeranchor"></span></a>空间关系建模基础概念</h3>
+<p><strong>注意事项</strong>:</p>
 <blockquote>
 <ul>
-<li>OLS模型条件<ul>
-<li>大于指定的校正<code>$R^2$</code>阈值；</li>
-<li>对于所有纳入模型的解释变量，系数<code>P值</code>小于指定的阈值；</li>
-<li>对于所有纳入模型的解释变量，系数<code>VIF值</code>小于指定的阈值（经验阈值7.5）；</li>
-<li>返回的<code>Jarque-Bera P值</code>大于指定的值。</li>
-</ul>
-</li>
-<li>对模型残差运用空间自相关工具（<code>Global Moran's I</code>），计算得到的P值与指定的P值进行比较，如果小于指定的P值，则模型视为合格模型。</li>
+<li>空间统计中基于欧氏距离或曼哈顿距离来度量距离，总是针对投影数据来进行的操作，所以在运用之前一定要将地理数据转换为投影数据；</li>
+<li>使用shapefile时，不能存储空值（<b>特别注意可能在数据处理过程中会将空值存储为0或者极大的负值</b>）</li>
 </ul>
 </blockquote>
-<p>【附】：探索性回归分析工具还会对具有三个最高校正<code>$R^2$</code>结果的模型使用空间自相关工具，进行回归残差检验。</p>
-<p>正确OLS模型应该满足以下条件：</p>
-<blockquote>
-<ul>
-<li>解释变量的所有变量系数都具有统计显著性；</li>
-<li>变量系数都能够反映对应解释变量与因变量之间的预期关系或与因变量之间的合理关系；</li>
-<li>解释变量从VIF小于7.5的变量中获得；</li>
-<li>Jarque-Bera P值不具有统计显著性，即残差不存在正态分布；</li>
-<li>空间自相关P值不具有统计显著性，即残差在空间上是随机分布的偏高/低预测值。</li>
-</ul>
-</blockquote>
-<p>【争议内容】<br />
-1. 科学方法：应该先建立正式的假设，然后才能对数据进行探索。若仅对训练数据集的拟合，会导致无法对其它数据集的预测或拟合，表现在过拟合的模型不稳定或解释变量系数显著性变小，P值变大。<br />
-2. 数据挖掘：无法先验知晓有助于任何给定真实结果的所有因素。<br />
-3. 针对上述争议内容，最好就是将所有数据分成训练集和验证集。</p>
-<h3 id="ols"><a name="user-content-ols" href="#ols" class="headeranchor-link" aria-hidden="true"><span class="headeranchor"></span></a>二、OLS</h3>
-<p>$ Y = \beta X + \mu $<br />
-<a href="http://resources.arcgis.com/zh-cn/help/main/10.1/index.html#/na/005p00000022000000/">ArcGIS OLS工具</a></p>
-<p>误差零假设：</p>
-<blockquote>
-<ul>
-<li>零条件均值 $E(\mu) = 0$</li>
-<li>同方差性（对不同的自变量集合，随机误差项都有相同的方差，检验参数的估计值是不是有效的）</li>
-<li>正态性</li>
-</ul>
-</blockquote>
+<h4 id="1-conceptulization-of-spatial-relationships"><a name="user-content-1-conceptulization-of-spatial-relationships" href="#1-conceptulization-of-spatial-relationships" class="headeranchor-link" aria-hidden="true"><span class="headeranchor"></span></a>1.空间关系概念化  Conceptulization of Spatial  Relationships</h4>
+<p><strong>适用</strong>：空间自相关（global Moran’s I）、聚类和异常值分析（Anselin local Moran&rsquo;s I）、热点分析（Getis-Ord Gi*）等，注意某些选项只有在生成<code>空间权重矩阵</code>或生成<code>网络空间权重</code>时才可用。</p>
 <ol>
-<li><code>P 值</code><br />
-    大多数回归都会进行统计检验以针对每个自变量的关联系数计算出一个称为P的概率值，表示的是零假设成立的概率值。<br />
-    零假设：关联系数与零无显著差异，即关联系数为 0；<br />
-    P值越小，表明关联系数与零无显著差异的概率越小，即关联系数极小可能为0。</li>
-<li><code>$R^2 / adjuested R^2$</code><br />
-    用于量化模型的性能。计算公式如下：<br />
-    $R^2 = SSR / SST$<br />
-    其中 SSR为回归平方和，SST为总偏差平方和，$SST = SSR = SSE$，SSE为残差平方和。<br />
-    解释：值越大，残差平方和就越小，表示总偏差平方和中可以由回归平方和解释的比例越大，回归效果就越显著。<br />
-    局限性：当向模型中增加变量后，$R^2$会变大，但增加的解释变量不一定具有统计学意义，故出现了校正系数 $adjusted R^2$，所以解释变量增多，校正决定系数不一定会增大。<br />
-    注：决定系数的大小还与自变量的取值范围有关，即使$R^2$很大，模型的外推效果不一定很好，应该同时还关注均方误差 <code>MSE</code>。</li>
-</ol>
-<h4 id="_2"><a name="user-content-_2" href="#_2" class="headeranchor-link" aria-hidden="true"><span class="headeranchor"></span></a>空间数据回归常见问题</h4>
-<ol>
-<li>遗漏解释变量<br />
-    后果：其系数和对应的P值不可信<br />
-    解决：检查OLS残差和GWR系数 或者 OLS残差进行热点分析</li>
-<li>非线性关系（OLS/GWR均为线性方法）<br />
-    后果：线性回归模型不佳<br />
-    解决：创建散点图矩阵（Scatter Plot Matrix）来了解所有变量之间的相关关系；另外可以通过变量变换来修复曲线（偏态分布-&gt;正态分布）；或者用非线性方法</li>
-<li>数据异常值（建模之前完成）<br />
-    后果：回归关系背离最佳拟合，从而使回归系数发生偏差<br />
-    解决：创建散点图矩阵、直方图或箱线图来寻找异常点。若异常值不符合实际则直接删除，否则对有无异常值分别进行建模讨论。</li>
 <li>
-<p>不稳定性（空间非平稳性/异质性）<br />
-    后果：因变量与解释变量在研究区内表现出不一致的关系<br />
-    解决：ArcGIS中的OLS工具可以自动检测非平稳性问题并计算稳健标准误差，可尝试用GWR进行分析。<br />
-    附：Koenker(BP)评估空间非平稳性</p>
-<blockquote>
-<ul>
-<li>用于评估模型因变量与解释变量在空间上是否表现出一致的关系；</li>
-<li>如果模型在空间中表现一致，则由解释变量表示的空间进程在各个区域位置也是一直的，且预测值与每个解释变量之间关系的变化不会随着解释变量值的变化而变化（误差同方差）；</li>
-<li>实例，在犯罪预测中，收入作为一个解释变量，可能对收入中位数以下的预测比对中位数以上的预测更为准确，即出现了异方差性。</li>
-<li>Koenker显著性检验表面统计量是显著的，则需要稳健系数标准差和稳健概率来评估解释变量的效果。</li>
-</ul>
-</blockquote>
+<p>反距离、反距离平方（阻抗）<br />
+使用“反距离”选项时，空间关系的概念模型是一种阻抗或距离衰减。任何要素都会影响其他所有要素，但距离越远，影响越小。使用反距离这一概念化表述时，通常要指定一个距离范围或距离阈值以减少所需的计算数（尤其对于大型数据集而言）。<br />
+反欧氏距离适用于对连续数据（如温度变化）进行建模。当分析涉及硬件存储的位置或其他固定的城市设施位置时，道路网络数据不再适用，而反曼哈顿距离可能最为合适。</p>
 </li>
 <li>
-<p>多重共线性<br />
-    后果：导致模型不稳定；<br />
-    解决：OLS工具会给出方差膨胀因子（VIF与7.5），剔除VIF较大的解释变量，或者创建交互变量，或者增加采样大小。</p>
+<p>固定距离范围（影响的范围）<br />
+对于某些工具（如热点分析），固定距离范围是默认空间关系的概念化。通过“固定距离范围”选项，可以对数据施加一个空间交互的影响范围或移动窗口概念模型。只为在距离范围内的每个要素进行分析，权重相等，范围外的不参与运算，权重为0。</p>
 </li>
-<li>残差的方差不一致性<br />
-    后果：在某些变量范围内，不能很好的预测因变量的值，结果会出现交大的偏差；<br />
-    解决：根据Koenker检验，参考稳健概率来确定解释变量是否具有统计显著性。</li>
-<li>正态分布偏差<br />
-    后果：残差不服从均值为0的正态分布，关联系数的P值将变得不可靠；<br />
-    解决：当Jarque-Bera统计量显著时，很可能是因为错误指定了模型（缺少关键变量）或模型的关系应为非线性关系。</li>
-<li>空间自相关残差<br />
-    后果：当模型的偏高/低估计值存在空间聚类时，会导致模型的不可靠；<br />
-    解决：对残差进行空间自相关检验，若出现空间聚类的统计显著性，则是因为指定错误导致的，缺失关键变量。</li>
+<li>
+<p>无差别的区域<br />
+该选项是将“反距离”模型和“固定距离范围”模型合并为一体。距离范围或距离阈值内的所有要素都包含在对目标要素的分析中，超过关键距离后，影响级别（权重）会快速下降。<br />
+这种情况下，距离会变得更像是阻抗并且可能影响到最终决策。</p>
+</li>
+<li>
+<p>面邻接（一阶）<br />
+对于面要素类，可选择 CONTIGUITY_EDGES_ONLY（有时称为 Rook&rsquo;s Case）或 CONTIGUITY_EDGES_CORNERS（有时称为 Queen&rsquo;s Case）。对于 EDGES_ONLY，共享边（具有重合边界）的面包含在目标面的计算中。不共享边的面被排除在目标要素计算之外。对于 EDGES_CORNERS，共享边和/或角的面包含于目标面的计算中。</p>
+</li>
+<li>
+<p>K最近邻域<br />
+构造邻域关系，以便每个要素都可在其指定数量的最近邻域空间环境内进行评估。该种方式在要素密度高的位置处，分析的空间范围会比较小。与此类似，要素密度稀的位置，分析的空间范围会比较大。<br />
+应用于<code>生成空间权重矩阵（Generate Spatial Weights Matrix）</code>工具，以结合探索性回归评估回归残差。相邻要素数目设置为8。</p>
+</li>
+<li>
+<p>Delaunay三角测量（自然邻域）<br />
+使用“Delaunay 三角测量”选项可构造邻域，方法是通过点要素或要素质心创建 Voronoi 三角形，使得每个点/质心都是三角形结点。由三角形的边连接的结点被视为相邻结点。使用 Delaunay 三角测量可确保每个要素至少具有一个邻域，即使数据包含岛和/或变化明显的要素密度。可用于<code>生成空间权重矩阵</code>工具中。<br />
+注：有要素重合时不可使用。</p>
+</li>
+<li>
+<p>空间时间窗<br />
+根据空间窗（固定距离）和时间窗（固定时间间隔）来定义要素的关系。当使用<code>生成空间权重矩阵</code>工具创建空间权重矩阵文件时，此选项可用，且以此配合热点分析空间-时间热点。</p>
+</li>
+<li>
+<p>通过文件获取空间权重<br />
+可用于<code>生成空间权重矩阵</code>工具或<code>生成网络空间权重</code>工具来创建存储要素邻域关系的文件。<br />
+例如要使用根据网络数据集获得的行程时间或行程成本来定义空间关系，可使用生成网络空间权重工具创建空间权重矩阵文件，然后使用得到的 SWM 文件进行分析。</p>
+</li>
 </ol>
-<h3 id="gwr"><a name="user-content-gwr" href="#gwr" class="headeranchor-link" aria-hidden="true"><span class="headeranchor"></span></a>三、GWR</h3>
-<p><a href="http://resources.arcgis.com/zh-cn/help/main/10.1/index.html#/na/005p00000031000000/">ArcGIS工具</a></p>
-<h4 id="_3"><a name="user-content-_3" href="#_3" class="headeranchor-link" aria-hidden="true"><span class="headeranchor"></span></a>工作原理</h4>
-<p>GWR是对每一个空间要素构建一个独立方程，将落在目标要素带宽内的要素因变量与解释变量合并作为目标要素的训练样本集；将目标要素的空间位置到其他各临近点的空间距离作为权，并嵌入到回归参数中，利用局部最小二乘法逐点参数估计。<br />
-【带宽】：取决于核类型、带宽方法、距离以及相邻点数。<br />
-注：若相邻超过1000个样本点，则只取最邻近的1000个；而硬性要求是100个要素样本集，以获得较好结果。</p>
-<h4 id="_4"><a name="user-content-_4" href="#_4" class="headeranchor-link" aria-hidden="true"><span class="headeranchor"></span></a>核心</h4>
-<p>空间权重矩阵（Spatial Weight matrix），通过不同的空间权函数来得到。</p>
+<h4 id="2-distance-band-threshold-distance"><a name="user-content-2-distance-band-threshold-distance" href="#2-distance-band-threshold-distance" class="headeranchor-link" aria-hidden="true"><span class="headeranchor"></span></a>2.距离范围或距离阈值  distance band/ threshold distance</h4>
+<p>使用距离范围或距离阈值可设置大多数空间关系的概念化（例如，反距离、固定距离范围）的分析比例。<br />
+使用“无差别的区域 ZONE_OF_INDIFFERENCE”时，指定距离之外的要素的影响会随邻近程度的减小而变弱，而距离阈值之内的影响则视为是相等的。<br />
+空间关系的概念化参数的不同选项对于三种可能的输入类型（负值无效）的行为方式如下：<br />
+<img alt="distance band" src="Space-Time-Cube/distance" title="band.png" /></p>
+<h4 id="3"><a name="user-content-3" href="#3" class="headeranchor-link" aria-hidden="true"><span class="headeranchor"></span></a>3.权重矩阵</h4>
+<p>空间权重是反映数据集中每个要素和其他任何一个要素之间的距离、时间或其他成本的数字，格式可为ASCII文件。<br />
+<strong>格式</strong>：<br />
+第一行是唯一ID字段的名称，每个要素具有唯一值；后面的每行为三列，分别为起始要素ID、终止要素ID和权重。<br />
+注：权重在表示距离或时间会被取到数。</p>
+<h3 id="_2"><a name="user-content-_2" href="#_2" class="headeranchor-link" aria-hidden="true"><span class="headeranchor"></span></a>聚类和异常值分析</h3>
+<p>ArcGIS中的<code>Cluster and Outlier (Anselin Local Morans I)</code>工具<br />
+<img alt="local Moran's I" src="Space-Time-Cube/local" title="Moran's I.png" /></p>
+<p><strong>1.作用</strong>：该工具是根据指定的分析字段来识别高值或低值的要素在空间上的聚类，同时可以识别异常值。计算结果有<code>local Moran's I指数</code>、<code>z得分</code>、<code>p值</code>和每个具有显著统计学意义的要素的聚类所属类型的编码，其中z得分和p值表示计算出的local Moran&rsquo;s I指数的统计显著性。</p>
+<p><strong>2.公式</strong>：<br />
+<img alt="formula local Moran's I" src="Space-Time-Cube/formula" title="local Moran's I.png" /></p>
+<p><strong>3.解释</strong>：</p>
 <blockquote>
 <ul>
-<li>距离阈值法<br />
-    选取合适的阈值D，在阈值范围内的为局部样本数据集，该方法较为直接；</li>
-<li>距离反比法<ul>
-<li>$W_{ij} = 1 / {d_{ij}^\alpha$</li>
-<li>该方法不宜直接使用，当回归点本身也为采样点时，易造成$W_ij$无穷大；</li>
+<li>local Moran&rsquo;s I：正值表示要素周围具有同样高或低的邻近要素；负值表示要素周围具有不同值的邻近要素，即为异常值。<ul>
+<li>注：被视为统计学上显著性的聚类和异常值，其对应的p值必须足够小</li>
 </ul>
 </li>
-<li>Gauss函数（连续单调减函数）<ul>
-<li>$W_{ij} = exp(-(s_{ij} / b)^2)$</li>
-<li>b 为权重与距离之间函数关系的非负数衰减参数，带宽。权重会随着距离的增加而衰减，且衰减的越慢；</li>
-<li>更加普适，克服了前两种的不足；</li>
-</ul>
-</li>
-<li>截尾型函数法<br />
-    常用bi-square函数</li>
+<li>聚类/异常值类型 (COType) 字段：HH聚类、LL聚类；HL聚类、LH聚类（异常值）。</li>
 </ul>
 </blockquote>
-<h4 id="_5"><a name="user-content-_5" href="#_5" class="headeranchor-link" aria-hidden="true"><span class="headeranchor"></span></a>权函数带宽优化</h4>
-<p>GWR对带宽b较为敏感，带宽过大回归参数估计的偏差过大，过小又会导致估计的方差过大。</p>
+<p><strong>4.应用准则</strong>：</p>
 <blockquote>
-<p>1 交叉验证（CV）<br />
-    - $CV = 1/n*\sum_{i=1}^n[y_i - \hat y_{!=i}(b)]^2$ (不包括目标要素本身)<br />
-    - 带宽b 与 CV值可绘制一条曲线，就可直观找到CV值最小的最优带宽b；<br />
-2 AIC准则<br />
-    - AICc：用于比较不同的回归模型，具有较低AICc值的模型将更好的拟合观测数据，但其不是拟合度的绝对度量，较适合于同一因变量且具有不同解释变量的模型比较有用。<br />
-    - $AIC= 2n\ln(\hat\sigma) + n\ln(2\pi) + n[(n+tr(s))/(n-2-tr(s))]$<br />
-    - $\hat\sigma$是随机误差项的方差极大似然估计值，$\hat\sigma = RSS/n+tr(s)$<br />
-    - 原则：使AIC最小的权函数对应的带宽b。</p>
+<ul>
+<li>要素至少包括30个；</li>
+<li>输入字段为数值型，如果是点数据，则无需特定数值属性；</li>
+<li>如果查找多个事件点或少许事件点的位置，可用热点分析工具<code>Getis-Ord Gi*</code>；<ul>
+<li>注：只有聚类和异常值分析<code>Anselin Local Moran's I</code>工具可以识别统计学显著性和空间异常值（HL/LH）</li>
+</ul>
+</li>
+<li>合适的距离范围或阈值范围；<ul>
+<li>所有要素至少具有一个相邻要素</li>
+<li>任何要素都不应该将其它所有要素都作为相邻要素</li>
+<li>输入字段的值有偏斜时，每个要素应具有大约八个相邻要素</li>
+</ul>
+</li>
+</ul>
 </blockquote>
-<h4 id="_6"><a name="user-content-_6" href="#_6" class="headeranchor-link" aria-hidden="true"><span class="headeranchor"></span></a>局部共线性</h4>
-<p>对GWR局部方程，用于方程的解释变量会在空间上存在聚类，会导致在局部出现多重共线性。<br />
-当选取Bandwidth method为AICc或CV时，GWR将查找最佳距离（FIXED核类型）胡最佳相邻点数（ADAPTIVE核类型），若存在局部多重共线性，将阻止AICc和CV解析最佳距离或最佳相邻点数。<br />
-解决：若出现模型错误，则指定距离或相邻点书目，然后检查要素类中的条件数（&gt;30；&rdquo;Null&rdquo;；极小值）查看哪些要素与共线性关联（可移除）。或者可以通过对各解释变量做空间聚类，在空间上出现相同值的位置对应的变量移除掉或将其与其它解释变量合并以便加大值的变化性。</p></article></body></html>
+<p><strong>5.应用</strong>：</p>
+<blockquote>
+<ul>
+<li>犯罪的高低值边界；</li>
+<li>空间异常点检测。</li>
+</ul>
+</blockquote>
+<p><strong>6.实例</strong>:<br />
+上海市两抢一盗<br />
+<img alt="LQYD local Moran's I" src="Space-Time-Cube/LQYD" title="local Moran's I" /></p>
+<h3 id="geti-ord-gi"><a name="user-content-geti-ord-gi" href="#geti-ord-gi" class="headeranchor-link" aria-hidden="true"><span class="headeranchor"></span></a>热点分析（Geti-Ord  Gi*）</h3>
+<p>ArcGIS中的<code>Hot Spot Analysis（Getis-Ord Gi*）</code>工具<br />
+<img alt="Getis-Ord Gi*" src="Space-Time-Cube/Getis-Ord" title="Gi.png" /></p>
+<p>热点分析工具是对数据集中的每一个要素计算Getis-Ord Gi*。然后通过z得分和p值，即可知道高值或低值要素在空间上发生聚类的位置。<br />
+<strong>1.原理</strong>：高值要素很容易发现，但是有可能不具有统计学意义，所以要根据邻近要素是否为高值，且同样被邻近高值要素环绕。<br />
+量化：某个要素及其相邻要素的局部总和将与所有要素的总和进行比较；当局部总和与所预期的局部总和有很大差异，以致于无法成为随机产生的结果时，会产生一个具有显著统计学意义的 <code>z 得分</code>。</p>
+<p><strong>2.公式</strong>:<br />
+<img alt="formula Getis-Ord Gi*" src="Space-Time-Cube/formula" title="Getis-Ord Gi.png" /></p>
+<p><strong>3.解释</strong>：<br />
+具有显著统计学意义的z得分，正值z越大，则热点的聚类越紧密，反之负值z越小，则冷点的聚类就越紧密。</p>
+<p><strong>4.注意</strong>：</p>
+<blockquote>
+<ol>
+<li>分析字段：热点分析评估的是值在空间上的高低聚类情况，包含该类值的字段为输入字段。特别注意的是点事件数据，针对该类分析是关注于点密度，热点分析工具不能直接完成此操作，需要将点数据先进行聚合，如在格网上进行计数、某个点一定范围内的点数量等，然后以此点计数字段作为输入字段；</li>
+<li>参数选取<ul>
+<li>空间关系的概念化（Conceptualization of Spatial Relationships）：默认FIEXD_DISTANCE_BAND(推荐)</li>
+<li>距离范围（Distance Method）：</li>
+<li>距离阈值（Threshold Distance）：</li>
+</ul>
+</li>
+</ol>
+</blockquote>
+<p><strong>5.应用准则</strong>：</p>
+<blockquote>
+<ol>
+<li>输入要素类至少包含30个要素；</li>
+<li>空间关系概念化推荐FIXED_DISTANCE_BAND；</li>
+<li>距离范围或距离阈值<ul>
+<li>所有要素至少具有一个相邻要素；</li>
+<li>任何要素都不应该将其它所有要素都作为相邻要素；</li>
+<li>输入字段的值有偏斜时，每个要素应具有大约八个相邻要素</li>
+</ul>
+</li>
+</ol>
+</blockquote>
+<h3 id="_3"><a name="user-content-_3" href="#_3" class="headeranchor-link" aria-hidden="true"><span class="headeranchor"></span></a>时空模式挖掘</h3>
+<p>主要内容包括空间和时间上数据的分布和模式分析。</p>
+<h4 id="1netcdf"><a name="user-content-1netcdf" href="#1netcdf" class="headeranchor-link" aria-hidden="true"><span class="headeranchor"></span></a>1.NetCDF 数据结构</h4>
+<p>全称是网络公用数据格式，是一种用来存储温度、湿度、气压、风速和风向等多维科学数据（变量）的文件格式。在 ArcGIS 中，通过根据 NetCDF 文件创建图层或表视图，可以用一个维度（例如时间）来显示上述所有变量。<br />
+<strong>特性</strong>：自描述性、可移植性、可扩展性<br />
+<strong>基本组成</strong>：维度、变量和属性<br />
+<strong>ArcGIS中使用</strong>：在MultiDimension Tools 中有多个工具关于NetCDF 的工具可以操作该数据格式。<br />
+<a href="http://desktop.arcgis.com/zh-cn/arcmap/10.4/manage-data/netcdf/about-the-netcdf-tutorial.htm">ArcGIS 帮助链接</a></p>
+<h4 id="2"><a name="user-content-2" href="#2" class="headeranchor-link" aria-hidden="true"><span class="headeranchor"></span></a>2.创建时空立方体</h4>
+<p>将一组点聚合到时空条柱将其汇总到NetCDF数据结构中，在每个条柱内计算点并聚合指定属性。然后对所有条柱位置评估计数趋势和汇总字段值。<br />
+<img alt="创建NetCDF" src="Space-Time-Cube/create" title="netCDF.png" /></p>
+<h4 id="3_1"><a name="user-content-3_1" href="#3_1" class="headeranchor-link" aria-hidden="true"><span class="headeranchor"></span></a>3.新兴时空热点分析</h4>
+<p>识别时空立方体中点计数或汇总字段聚类中的趋势，类别包括新增的、连续的、加强的、持续的、逐渐减少的、分散的、振荡的以及历史的热点和冷点。<br />
+<img alt="识别点" src="Space-Time-Cube/identify" title="hot spot.png" /></p>
+<h4 id="4"><a name="user-content-4" href="#4" class="headeranchor-link" aria-hidden="true"><span class="headeranchor"></span></a>4.挖掘工具</h4></article></body></html>
